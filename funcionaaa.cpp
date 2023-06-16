@@ -98,8 +98,10 @@ void escrever_no_arquivo(Lista listas[], int tam) {
 	arquivo.open("listaPalavras.csv");
 	if (arquivo.is_open()) {
 		for (int i = 0; i < tam; i++) {
-			for (int j = 0; j < listas[i].tam; j++) {
-				arquivo << listas[i].palavras[j] << ",";
+			if (!listas[i].deletar) { //só salva no arquivo as listas onde o deletar for false
+				for (int j = 0; j < listas[i].tam; j++) {
+					arquivo << listas[i].palavras[j] << ",";
+				}
 			}
 			cout << "\n";
 		}
@@ -123,6 +125,14 @@ void pegar_listas_do_arquivo(Lista listas[], int tam) {
 		arquivo.close();
 	}
 	else cout << "\nErro ao abrir o arquivo\n";
+}
+
+void deletar_lista(Lista listas[], int tam) {
+	cout << "Estas sao as listas atuais: \n" << endl;
+	mostrar_listas(listas, tam); 
+
+	int escolha = opcao_invalida("\n\nQual lista deseja deletar", 1, tam);
+	listas[escolha - 1].deletar = true;
 }
 
 int main()
@@ -162,11 +172,16 @@ int main()
 			break;
 
 		case 2: //ESCREVER LISTA
-			listas = aumentar_vetor(listas, tam, 1);
+			if (cont_linhas == tam) {
+				listas = aumentar_vetor(listas, tam, 1);
+			}
 			escrever_nova_lista(listas, tam);
+			cont_linhas++;
 			break;
 
 		case 3: //DELETAR UMA LISTA
+			cont_linhas = cont_linhas - 1;
+			deletar_lista(listas, tam);
 			break;
 
 		case 4: //JOGAR
