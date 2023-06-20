@@ -3,6 +3,7 @@
 #include <string>
 #include <time.h>
 #include <cstdio>
+#include <locale>
 
 /*
 Instruções:
@@ -44,6 +45,16 @@ int opcao_invalida(string frase, int min, int max) {
     return op;
 }
 
+bool verificar_caracteres (string palavra) {
+    locale local;
+    for (char c : palavra) {
+        if (!isalpha(c, local) || c == 'ç' || c == 'Ç') {
+            return false; // caracter inválido encontrado
+        }
+    }
+    return true; // todos os caracteres são válidos
+}
+
 template<typename T>
 T* aumentar_vetor(T* listas, int& tam, int pos) {
     T* aux = new T[tam + pos]; //aumenta o vetor com a quantidade de posições desejadas
@@ -73,12 +84,19 @@ int contar_linhas_arquivo() {
 
 void escrever_nova_lista(Lista listas[], int tam) {
     int cont = 0;
+    string palavra;
+    cin.ignore(); //para não pegar o ultimo enter do int main
     do {
         cout << "\n\t" << cont + 1 << ") ";
-        cin >> listas[tam - 1].palavras[cont];
-        cont++;
+        getline(cin, palavra);
+        if (verificar_caracteres(palavra)) { //verifica se as palavras digitadas sao validas (sem caracteres especiais)
+            listas[tam - 1].palavras[cont] = palavra; //se for valido salva a palavra na lista
+            cont++;
+        }
+        else {
+            cout << "\tPalavra com caracter invalido, digite novamente";
+        }
     } while (cont < listas[tam - 1].tam);
-
     cout << "\nPalavras adicionadas a lista com sucesso!" << endl;
 }
 
@@ -249,7 +267,6 @@ int main()
                 system("cls");
                 break;
             }
-
             escrever_nova_lista(listas, tam);
             escrever_no_arquivo(listas, "listaPalavras.temp", tam);
             cont_linhas++;
