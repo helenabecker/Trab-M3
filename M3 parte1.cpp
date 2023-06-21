@@ -216,8 +216,9 @@ int main()
     verifica_temp(); //arquivo de backup
     //Sleep(1000);
     popular_lista(listas, tam);
+    
     int cont_linhas = contar_linhas_arquivo(); // contando linhas depois de popular
-    cout << cont_linhas;
+
     if (cont_linhas > 1)
         listas = aumentar_vetor(listas, tam, cont_linhas - 1);
 
