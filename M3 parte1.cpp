@@ -1,22 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <time.h>
-#include <cstdio>
+#include <cstdio> 
+#include <locale> 
 
-/*
-Instruções:
-PARTE 1:
-    + Implementar a possibilidade de o usuário criar e armazenar usando arquivos em disco várias listas de palavras.
-    + Permitir ao usuário a modificação ou inclusão de uma nova lista.
-    + Você pode usar um menu para a escolha das opções do usuário.
-    - As palavras não poderão ter acentos ou caracteres especiais (como ç, por exemplo).
-    + As listas de palavras deverão ser armazenadas em vetores de estruturas (structs).
-    + O arquivo deverá ser salvo em formato CSV, separado por virgulas. Cada linha conterá uma lista de palavras.
-    + Quando o seu programa iniciar a execução, o arquivo deve ser lido e as listas armazenadas em memória.
-    + Quando o usuário escolher a opção fim do seu programa, a sua lista em memória deverá ser salva novamente em
-      disco no mesmo formato de antes, sobrescrevendo o arquivo original
-*/
+// Alunas: Flávia Schnaider e Helena Becker Piazera
 
 using namespace std;
 #define tam_maximo 10
@@ -44,12 +32,20 @@ int opcao_invalida(string frase, int min, int max) {
     return op;
 }
 
+bool verificar_caracteres(string palavra) {
+    locale local;
+    for (char c : palavra)
+        if (!isalpha(c, local) || c == 'ç' || c == 'Ç')
+            return false; // caracter inválido encontrado
+    return true; // todos os caracteres são válidos
+}
+
 template<typename T>
 T* aumentar_vetor(T* listas, int& tam, int pos) {
     T* aux = new T[tam + pos]; //aumenta o vetor com a quantidade de posições desejadas
-    for (int i = 0; i < tam; i++) {
+    for (int i = 0; i < tam; i++)
         aux[i] = listas[i];
-    }
+
     delete[] listas;
     tam += pos;
     return aux;
@@ -63,22 +59,30 @@ int contar_linhas_arquivo() {
 
     if (arquivo.is_open()) {
         while (getline(arquivo, linha)) {
-            contador++;
+            if (linha.empty() == false) {
+                contador++;
+            }
         }
         arquivo.close();
         return contador;
     }
-    else return 0;
+    else return -1;
 }
 
 void escrever_nova_lista(Lista listas[], int tam) {
     int cont = 0;
+    string palavra;
+    cin.ignore(); //para não pegar o ultimo enter do int main
     do {
         cout << "\n\t" << cont + 1 << ") ";
-        cin >> listas[tam - 1].palavras[cont];
-        cont++;
+        getline(cin, palavra);
+        if (verificar_caracteres(palavra)) { //verifica se as palavras digitadas sao validas (sem caracteres especiais)
+            listas[tam - 1].palavras[cont] = palavra; //se for valido salva a palavra na lista
+            cont++;
+        }
+        else
+            cout << "\tPalavra com caracter invalido, digite novamente";
     } while (cont < listas[tam - 1].tam);
-
     cout << "\nPalavras adicionadas a lista com sucesso!" << endl;
 }
 
@@ -149,9 +153,8 @@ void deletar_lista(Lista listas[], int tam) {
 
     cout << "\nPara voltar ao Menu, digite 0.";
     int escolha = opcao_invalida("\nQual lista deseja deletar?", 0, tam);
-    if (escolha == 0) 
-        return;
-    else 
+    if (escolha == 0) return; // volta ao Menu
+    else
         listas[escolha - 1].deletar = true;
 }
 
@@ -159,9 +162,11 @@ void alterar_lista(Lista listas[], int tam) {
     cout << "Listas atuais: \n" << endl;
     mostrar_listas(listas, tam);
 
-    cout << "\nPara voltar ao Menu, digite 0.";
-    int escolha = opcao_invalida("\nQual lista deseja alterar?", 0, tam);
-
+    int escolha = opcao_invalida("\n\nPara voltar ao Menu, digite 0.\nQual lista deseja alterar?", 0, tam);
+    if (escolha == 0) {
+        system("cls");
+        return; // volta ao menu
+    }
     listas[escolha - 1].tam = opcao_invalida("\n\nInforme quantas palavras deseja escrever", 0, tam_maximo);
     escrever_nova_lista(listas, escolha);
 }
@@ -174,6 +179,7 @@ void verifica_temp() {
         csv_arquivo.close();
         temp_arquivo.close();
         remove("listaPalavras.temp");
+
     }
 }
 
@@ -184,12 +190,11 @@ void popular_lista(Lista listas[], int tam) {
     string linha;
     contador = contar_linhas_arquivo();
 
-    if (arquivo.is_open()) {
+    if (arquivo.is_open()) { // atualiza a lista de palavras
         while (getline(arquivo, linha)) {
-            listas[tam - 1].palavras[contador++];
+            listas[tam].palavras[contador++];
         }
         arquivo.close();
-
     }
 }
 
@@ -200,18 +205,19 @@ void exibirMenu() {
         << " [3] - Deletar uma lista\n"
         << " [4] - Alterar uma Lista\n"
         << " [5] - Jogar\n"
-        << " [0] - Salvar arquivo\n";
+        << " [0] - Salvar e Sair\n";
 }
 
 int main()
 {
     int escolha, tam = 1;
     Lista* listas = new Lista[tam];
-    int cont_linhas = contar_linhas_arquivo();
 
     verifica_temp(); //arquivo de backup
+    //Sleep(1000);
     popular_lista(listas, tam);
-
+    int cont_linhas = contar_linhas_arquivo(); // contando linhas depois de popular
+    cout << cont_linhas;
     if (cont_linhas > 1)
         listas = aumentar_vetor(listas, tam, cont_linhas - 1);
 
@@ -224,7 +230,7 @@ int main()
 
         switch (escolha)
         {
-        case 0: // SALVAR ARQUIVO
+        case 0: // SALVAR ARQUIVO E SAIR
             escrever_no_arquivo(listas, "listaPalavras.csv", tam);
             delete[] listas;
             remove("listaPalavras.temp");
@@ -233,6 +239,12 @@ int main()
 
         case 1: // VISUALIZAR LISTA
             system("cls");
+            if (cont_linhas == 0) {
+                cout << "\n\tNao existem listas registradas no momento, volte para o menu e escreva uma lista\n" << endl;
+                system("pause");
+                system("cls");
+                break;
+            }
             mostrar_listas(listas, tam);
             cout << "\n";
             system("pause");
@@ -241,7 +253,13 @@ int main()
 
         case 2: // ESCREVER LISTA
             system("cls");
-            if (cont_linhas == tam)
+            if (cont_linhas == 0) {
+                cout << "\n\tNao existem listas registradas no momento, volte para o menu e escreva uma lista\n" << endl;
+                system("pause");
+                system("cls");
+                break;
+            }
+            else if (cont_linhas == tam)
                 listas = aumentar_vetor(listas, tam, 1);
 
             listas[tam - 1].tam = opcao_invalida("\n\tDigite 0 para voltar para o Menu.\n\nInforme quantas palavras deseja escrever", 0, tam_maximo);
@@ -249,7 +267,6 @@ int main()
                 system("cls");
                 break;
             }
-
             escrever_nova_lista(listas, tam);
             escrever_no_arquivo(listas, "listaPalavras.temp", tam);
             cont_linhas++;
@@ -259,6 +276,12 @@ int main()
 
         case 3: // DELETAR UMA LISTA
             system("cls");
+            if (cont_linhas == 0) {
+                cout << "\n\tNao existem listas registradas no momento, volte para o menu e escreva uma lista\n" << endl;
+                system("pause");
+                system("cls");
+                break;
+            }
             cont_linhas = cont_linhas - 1;
             deletar_lista(listas, tam);
             escrever_no_arquivo(listas, "listaPalavras.temp", tam);
@@ -267,6 +290,12 @@ int main()
 
         case 4: //ALTERAR LISTA
             system("cls");
+            if (cont_linhas == 0) {
+                cout << "\n\tNao existem listas registradas no momento, volte para o menu e escreva uma lista\n" << endl;
+                system("pause");
+                system("cls");
+                break;
+            }
             alterar_lista(listas, tam);
             escrever_no_arquivo(listas, "listaPalavras.temp", tam);
             system("cls");
@@ -274,7 +303,7 @@ int main()
 
         case 5: // JOGAR (EM BREVE)
             system("cls");
-            cout << "Logo teremos esta opcao disponivel" << endl;
+            cout << "\n\tLogo teremos esta opcao disponivel\n" << endl;
             system("pause");
             system("cls");
             break;
