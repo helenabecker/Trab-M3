@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <cstdio> 
 #include <locale> 
 
 // Alunas: Flávia Schnaider e Helena Becker Piazera
@@ -171,33 +170,6 @@ void alterar_lista(Lista listas[], int tam) {
     escrever_nova_lista(listas, escolha);
 }
 
-void verifica_temp() {
-    ifstream temp_arquivo("listaPalavras.temp");
-    if (temp_arquivo.good()) {
-        ofstream csv_arquivo("listaPalavras.csv");
-        csv_arquivo << temp_arquivo.rdbuf();
-        csv_arquivo.close();
-        temp_arquivo.close();
-        remove("listaPalavras.temp");
-
-    }
-}
-
-void popular_lista(Lista listas[], int tam) {
-    ifstream arquivo;
-    arquivo.open("listaPalavras.csv");
-    int contador = 0;
-    string linha;
-    contador = contar_linhas_arquivo();
-
-    if (arquivo.is_open()) { // atualiza a lista de palavras
-        while (getline(arquivo, linha)) {
-            listas[tam].palavras[contador++];
-        }
-        arquivo.close();
-    }
-}
-
 void exibirMenu() {
     cout << "\n - - - - - MENU - - - - -\n" << endl
         << " [1] - Visualizar Lista Completa\n"
@@ -212,10 +184,6 @@ int main()
 {
     int escolha, tam = 1;
     Lista* listas = new Lista[tam];
-
-    verifica_temp(); //arquivo de backup
-    //Sleep(1000);
-    popular_lista(listas, tam);
     
     int cont_linhas = contar_linhas_arquivo(); // contando linhas depois de popular
 
@@ -234,7 +202,6 @@ int main()
         case 0: // SALVAR ARQUIVO E SAIR
             escrever_no_arquivo(listas, "listaPalavras.csv", tam);
             delete[] listas;
-            remove("listaPalavras.temp");
             return 0;
             break;
 
@@ -254,13 +221,7 @@ int main()
 
         case 2: // ESCREVER LISTA
             system("cls");
-            if (cont_linhas == 0) {
-                cout << "\n\tNao existem listas registradas no momento, volte para o menu e escreva uma lista\n" << endl;
-                system("pause");
-                system("cls");
-                break;
-            }
-            else if (cont_linhas == tam)
+            if (cont_linhas == tam)
                 listas = aumentar_vetor(listas, tam, 1);
 
             listas[tam - 1].tam = opcao_invalida("\n\tDigite 0 para voltar para o Menu.\n\nInforme quantas palavras deseja escrever", 0, tam_maximo);
@@ -269,7 +230,6 @@ int main()
                 break;
             }
             escrever_nova_lista(listas, tam);
-            escrever_no_arquivo(listas, "listaPalavras.temp", tam);
             cont_linhas++;
             system("pause");
             system("cls");
@@ -285,7 +245,6 @@ int main()
             }
             cont_linhas = cont_linhas - 1;
             deletar_lista(listas, tam);
-            escrever_no_arquivo(listas, "listaPalavras.temp", tam);
             system("cls");
             break;
 
@@ -298,7 +257,6 @@ int main()
                 break;
             }
             alterar_lista(listas, tam);
-            escrever_no_arquivo(listas, "listaPalavras.temp", tam);
             system("cls");
             break;
 
